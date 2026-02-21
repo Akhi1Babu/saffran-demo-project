@@ -48,16 +48,19 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          envs: DOCKER_USERNAME
           script: |
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+
             # ── Set up project directory ──────────────────────────────────
             mkdir -p ~/restaurant-project/nginx
 
-            # ── Write docker-compose.yml ──────────────────────────────────
-            cat > ~/restaurant-project/docker-compose.yml << 'EOF'
+            # ── Write docker-compose.yml (unquoted EOF so vars expand) ────
+            cat > ~/restaurant-project/docker-compose.yml << EOF
             version: "3.8"
             services:
               app:
-                image: ${{ secrets.DOCKER_USERNAME }}/restaurant-project:latest
+                image: ${DOCKER_USERNAME}/restaurant-project:latest
                 container_name: restaurant-app
                 restart: unless-stopped
                 expose:
@@ -82,7 +85,7 @@ jobs:
             EOF
 
             # ── Write nginx.conf ──────────────────────────────────────────
-            cat > ~/restaurant-project/nginx/nginx.conf << 'EOF'
+            cat > ~/restaurant-project/nginx/nginx.conf << 'NGINXEOF'
             server {
                 listen 80;
                 location / {
@@ -97,15 +100,15 @@ jobs:
                     proxy_cache_bypass $http_upgrade;
                 }
             }
-            EOF
+            NGINXEOF
 
             # ── Pull latest image ─────────────────────────────────────────
             echo "Pulling latest image..."
-            docker pull ${{ secrets.DOCKER_USERNAME }}/restaurant-project:latest
+            docker pull ${DOCKER_USERNAME}/restaurant-project:latest
 
             # ── Restart stack with docker-compose ─────────────────────────
             cd ~/restaurant-project
-            docker compose down
+            docker compose down || true
             docker compose up -d
 
             # ── Clean up old images ───────────────────────────────────────
