@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
 
 // Set up server-side rendering with EJS
 app.set('view engine', 'ejs');
@@ -48,7 +49,7 @@ app.get('/cart', (req, res) => {
   });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
